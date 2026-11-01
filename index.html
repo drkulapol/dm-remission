@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQL ดึงผู้ป่วยสิทธิ UC เข้าข่าย DM Remission (ระยะโรคสงบ) — HOSxP XE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f7f6; --card:#ffffff; --ink:#1d2b2a; --muted:#5b6b69; --line:#dbe4e2;
+    --pri:#0f766e; --pri-d:#0b5a54; --pri-l:#e6f4f2; --warn:#b45309; --warn-l:#fef3c7;
+    --code-bg:#0f1b1a; --code-ink:#d8f3ee;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Sarabun',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.6}
+  header.top{background:linear-gradient(135deg,#0f766e,#115e59);color:#fff;padding:28px 20px 24px}
+  header.top .wrap{max-width:1100px;margin:0 auto}
+  header.top h1{margin:0 0 4px;font-size:1.6rem;font-weight:700}
+  header.top p{margin:0;opacity:.9}
+  .badge{display:inline-block;background:rgba(255,255,255,.18);border-radius:999px;padding:2px 12px;font-size:.85rem;margin-bottom:10px}
+  main{max-width:1100px;margin:0 auto;padding:20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:18px}
+  .card h2{margin:0 0 12px;font-size:1.2rem;color:var(--pri-d)}
+  .card h3{margin:16px 0 8px;font-size:1.02rem}
+  ol.criteria{margin:0;padding-left:1.3em}
+  ol.criteria li{margin-bottom:6px}
+  .note{background:var(--warn-l);border-left:4px solid var(--warn);padding:10px 14px;border-radius:8px;font-size:.95rem;margin-top:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 18px}
+  label.f{display:block;font-weight:600;font-size:.93rem;margin-bottom:4px}
+  .hint{font-size:.82rem;color:var(--muted);margin-top:3px}
+  input[type=text],input[type=number],input[type=date],select,textarea{
+    width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fbfdfc}
+  textarea{font-family:'JetBrains Mono',monospace;font-size:.82rem;min-height:110px;resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--pri);outline-offset:0;border-color:var(--pri)}
+  .full{grid-column:1/-1}
+  .checks{display:flex;flex-direction:column;gap:8px}
+  .checks label{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+  .checks input{margin-top:5px}
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:9px 16px;cursor:pointer}
+  .b-pri{background:var(--pri);color:#fff}.b-pri:hover{background:var(--pri-d)}
+  .b-sec{background:var(--pri-l);color:var(--pri-d)}.b-sec:hover{background:#d3ece8}
+  .codewrap{position:relative}
+  pre.code{background:var(--code-bg);color:var(--code-ink);border-radius:10px;padding:16px;overflow:auto;max-height:560px;
+    font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.5;margin:0;white-space:pre}
+  .copybtn{position:absolute;top:10px;right:10px;background:#14b8a6;color:#04201d;padding:6px 12px;font-size:.85rem}
+  .copybtn.ok{background:#a7f3d0}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .tab{background:#eef3f2;color:var(--muted);padding:7px 14px;border-radius:8px 8px 0 0;font-weight:600;cursor:pointer;border:1px solid var(--line);border-bottom:0}
+  .tab.on{background:var(--code-bg);color:var(--code-ink);border-color:var(--code-bg)}
+  table.cols{width:100%;border-collapse:collapse;font-size:.92rem}
+  table.cols th,table.cols td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+  table.cols th{background:var(--pri-l);color:var(--pri-d)}
+  table.cols td:first-child{font-family:'JetBrains Mono',monospace;font-size:.82rem;white-space:nowrap}
+  ol.steps li{margin-bottom:6px}
+  code.i{background:var(--pri-l);color:var(--pri-d);padding:1px 6px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.85em}
+  footer{max-width:1100px;margin:10px auto 30px;padding:18px 20px;text-align:center;color:var(--muted);font-size:.92rem;border-top:1px solid var(--line)}
+  footer a{color:var(--pri);font-weight:600;text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  @media (max-width:600px){header.top h1{font-size:1.3rem}.card{padding:16px}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <span class="badge">HOSxP XE · PostgreSQL</span>
+    <h1>ดึงผู้ป่วยสิทธิ UC ที่เข้าข่าย DM Remission (เบาหวานระยะโรคสงบ)</h1>
+    <p>กรอกค่าของโรงพยาบาลท่าน → ระบบสร้าง SQL ให้คัดลอกไปรันใน HOSxP XE / pgAdmin / Navicat ได้ทันที</p>
+  </div>
+</header>
+
+<main>
+
+  <section class="card">
+    <h2>เกณฑ์การคัดกรอง</h2>
+    <ol class="criteria">
+      <li>เป็นผู้ป่วยเบาหวาน — มีรหัส ICD-10 <b>E11–E14</b> ใน <code class="i">ovstdiag</code> (ไม่รวม E10 เบาหวานชนิดที่ 1)</li>
+      <li>สิทธิ์ ณ visit ล่าสุดมี <code class="i">hipdata_code</code> = <b>UCS</b> หรือ <b>WEL</b> (ถ้าไม่มี visit ใช้ <code class="i">patient.pttype</code>)</li>
+      <li>HbA1c ครั้งล่าสุดต้องอยู่ในช่วงปีงบประมาณที่เลือก (ค่าเริ่มต้น ปีงบ 2569 คือ ตั้งแต่ 1 ต.ค. 2568)</li>
+      <li>HbA1c <b>2 ครั้งล่าสุด</b> (นับวันละ 1 ค่า) <b>&lt; 6.5%</b> ทั้ง 2 ครั้ง และห่างกัน <b>≥ 90 วัน</b></li>
+      <li>ไม่ได้รับยาเบาหวานแล้ว — ไม่มีการจ่ายยาเบาหวาน (OPD/IPD ใน <code class="i">opitemrece</code>) ตั้งแต่วันตรวจ HbA1c ครั้งแรกของคู่นั้น (ลบด้วยช่วงปลอดยาที่กำหนด) จนถึงปัจจุบัน
+        ยาเบาหวานดักจับ 2 ทาง: icode ที่ รพ. กำหนด + ชื่อยา (generic / trade / ไทย)</li>
+    </ol>
+    <div class="note">
+      ผลลัพธ์เป็น <b>รายชื่อที่ "เข้าข่าย"</b> ต้องให้แพทย์ทบทวนเวชระเบียนก่อนบันทึก/เบิกทุกราย โดยเฉพาะรายที่ <code class="i">evidence_prior_dm = N</code>
+      (ไม่เคยมี HbA1c ≥ 6.5 และไม่พบประวัติยาเบาหวานใน รพ.) ซึ่งอาจลงรหัสวินิจฉัยผิด หรือรับยาจากที่อื่น
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>① กรอกค่าของโรงพยาบาล</h2>
+    <div class="grid">
+      <div>
+        <label class="f" for="fy">ปีงบประมาณของ HbA1c ครั้งล่าสุด</label>
+        <select id="fy"></select>
+        <div class="hint">HbA1c ครั้งล่าสุดต้องตั้งแต่ 1 ต.ค. ของปีก่อนหน้า</div>
+      </div>
+      <div>
+        <label class="f" for="cutoff">HbA1c ต้องน้อยกว่า (%)</label>
+        <input type="number" id="cutoff" step="0.1" value="6.5">
+      </div>
+      <div>
+        <label class="f" for="gap">2 ครั้งห่างกันอย่างน้อย (วัน)</label>
+        <input type="number" id="gap" value="90">
+      </div>
+      <input type="hidden" id="buffer" value="0">
+      <input type="hidden" id="labstart" value="2018-01-01">
+      <input type="hidden" id="hip" value="UCS, WEL">
+      <div>
+        <label class="f" for="icodes">icode ยาเบาหวานของ รพ.</label>
+        <input type="text" id="icodes" value="1492082, 1670040, 1530013, 1610026, 1510030">
+        <div class="hint">ค่าเริ่มต้นเป็นของ รพ.สองแคว (Metformin, Pioglitazone, Glipizide, Mixtard penfill, NPH) · เว้นว่างได้ ระบบยังดักจากชื่อยา</div>
+      </div>
+      <input type="hidden" id="labcodes" value="">
+      <input type="hidden" id="a1cre" value="(hb ?a1c|a1c|glycated|glycosylated|ฮีโมโกลบิน.?เอ.?วัน)">
+      <input type="hidden" id="icd" value="^E1[1-4]">
+      <textarea id="drugre" hidden>metformin|glucophage|gluco[- ]?ma|diaformin|glipizide|minidiab|glucotrol|glibenclamide|glyburide|daonil|gliclazide|diamicron|glimepiride|amaryl|tolbutamide|chlorpropamide|pioglitazone|actos|rosiglitazone|sitagliptin|januvia|janumet|vildagliptin|galvus|linagliptin|trajenta|saxagliptin|onglyza|alogliptin|nesina|dapagliflozin|forxiga|xigduo|empagliflozin|jardiance|canagliflozin|ertugliflozin|acarbose|glucobay|voglibose|basen|miglitol|repaglinide|novonorm|nateglinide|starlix|liraglutide|victoza|semaglutide|ozempic|rybelsus|dulaglutide|trulicity|exenatide|lixisenatide|tirzepatide|mounjaro|insulin|insulatard|actrapid|mixtard|humulin|gensulin|novomix|novorapid|lantus|levemir|toujeo|tresiba|humalog|apidra|ryzodeg|basalog|glargine|detemir|degludec|aspart|lispro|glulisine|\mnph\M|เมทฟอร์มิน|ไกลพิไซด์|ไกลเบนคลาไมด์|กลิเบนคลาไมด์|ไกลคลาไซด์|ไพโอกลิทาโซน|อินซูลิน</textarea>
+      <input type="checkbox" id="optGeneric" hidden><input type="checkbox" id="optConfirm" hidden><input type="checkbox" id="optDeath" hidden><input type="checkbox" id="optEver" hidden>
+    </div>
+    <div class="btns">
+      <button class="b-pri" id="gen">สร้าง SQL</button>
+      <button class="b-sec" id="reset">คืนค่าเริ่มต้น (รพ.สองแคว)</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>② คัดลอก SQL ไปรัน</h2>
+    <div class="tabs" role="tablist">
+      <div class="tab on" data-t="main">SQL หลัก — รายชื่อผู้ป่วย</div>
+      <div class="tab" data-t="drug">ตรวจรายการยาเบาหวานที่จับได้</div>
+      <div class="tab" data-t="lab">ตรวจรายการ lab HbA1c ที่จับได้</div>
+    </div>
+    <div class="codewrap">
+      <button class="copybtn" id="copy">คัดลอก</button>
+      <pre class="code" id="out"></pre>
+    </div>
+    <div class="note">แนะนำให้รัน 2 แท็บตรวจสอบ (ยา และ lab) ก่อนครั้งแรกในแต่ละ รพ. เพื่อดูว่าจับครบหรือจับเกิน แล้วปรับ icode ยาเบาหวานด้านบนจนถูกต้อง</div>
+  </section>
+
+  <section class="card">
+    <h2>③ คอลัมน์ผลลัพธ์</h2>
+    <table class="cols">
+      <thead><tr><th>คอลัมน์</th><th>ความหมาย</th></tr></thead>
+      <tbody>
+        <tr><td>hn, cid, patient_name</td><td>ข้อมูลผู้ป่วย</td></tr>
+        <tr><td>age_y, sex</td><td>อายุ (ปี) และเพศ</td></tr>
+        <tr><td>pttype, pttype_name, hipdata_code</td><td>สิทธิ์ ณ visit ล่าสุด</td></tr>
+        <tr><td>first_dm_dx_date</td><td>วันแรกที่พบรหัสวินิจฉัยเบาหวาน</td></tr>
+        <tr><td>a1c_date_prev, a1c_prev</td><td>วันที่และค่า HbA1c ครั้งก่อนล่าสุด</td></tr>
+        <tr><td>a1c_date_latest, a1c_latest</td><td>วันที่และค่า HbA1c ครั้งล่าสุด</td></tr>
+        <tr><td>gap_days</td><td>ระยะห่างระหว่าง 2 ครั้ง (วัน)</td></tr>
+        <tr><td>a1c_max_ever, a1c_test_count</td><td>HbA1c สูงสุดที่เคยตรวจ และจำนวนวันที่ตรวจทั้งหมด</td></tr>
+        <tr><td>last_dm_drug_date, last_dm_drug_name</td><td>วันที่และชื่อยาเบาหวานที่ได้รับครั้งสุดท้าย</td></tr>
+        <tr><td>drug_status</td><td>"ไม่พบประวัติยาเบาหวานใน รพ." หรือ "หยุดยามาแล้ว N วัน"</td></tr>
+        <tr><td>evidence_prior_dm</td><td><b>Y</b> = มีหลักฐานว่าเคยเป็นเบาหวาน (เคยได้ยา หรือ HbA1c ≥ 6.5) · <b>N</b> = ควรทบทวนการวินิจฉัย</td></tr>
+        <tr><td>last_visit_date</td><td>วันที่มารับบริการครั้งล่าสุด</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>วิธีใช้</h2>
+    <ol class="steps">
+      <li>กรอก icode ยาเบาหวานของ รพ. ท่าน (ถ้าไม่ทราบ ให้รันแท็บ "ตรวจรายการยาเบาหวานที่จับได้" ก่อน)</li>
+      <li>กด <b>สร้าง SQL</b> แล้วกด <b>คัดลอก</b></li>
+      <li>วาง SQL ใน HOSxP XE (เมนู SQL Query) หรือ pgAdmin / Navicat ที่เชื่อมฐานข้อมูล PostgreSQL ของ HOSxP แล้วรัน</li>
+      <li>ส่งออกผลเป็น Excel ให้แพทย์ทบทวนเวชระเบียนรายคน</li>
+    </ol>
+    <p class="hint">ค่าที่กรอกจะถูกจำไว้ในเบราว์เซอร์นี้เครื่องเดียว ไม่มีการส่งข้อมูลออกไปที่ใด และหน้านี้ไม่เชื่อมฐานข้อมูลของ รพ.</p>
+  </section>
+
+</main>
+
+<footer>
+  ออกแบบและพัฒนาโดย นายแพทย์กุลพล ตั้งรัตนาพิบูล<br>
+  นายแพทย์ชำนาญการ (ด้านเวชกรรม)<br>
+  ปฏิบัติหน้าที่ผู้อำนวยการ<a href="https://www.songkwaehospital.com/" target="_blank" rel="noopener">โรงพยาบาลสองแคว</a> อำเภอสองแคว จังหวัดน่าน
+</footer>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const FIELDS = ['fy','cutoff','gap','buffer','labstart','hip','icd','icodes','labcodes','a1cre','drugre'];
+  const CHECKS = ['optGeneric','optConfirm','optDeath','optEver'];
+  const KEY = 'dm-remission-sql-params-v4';
+
+  // ปีงบประมาณ
+  const fySel = $('fy');
+  for (let y = 2566; y <= 2572; y++) {
+    const o = document.createElement('option');
+    o.value = y; o.textContent = 'ปีงบ ' + y + ' (ตั้งแต่ 1 ต.ค. ' + (y-1) + ')';
+    fySel.appendChild(o);
+  }
+  fySel.value = '2569';
+
+  // เก็บค่าเริ่มต้นไว้สำหรับปุ่ม reset
+  const defaults = {};
+  FIELDS.forEach(f => defaults[f] = $(f).value);
+  CHECKS.forEach(c => defaults[c] = $(c).checked);
+
+  function load(){
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (!s) return;
+      FIELDS.forEach(f => { if (s[f] !== undefined) $(f).value = s[f]; });
+      CHECKS.forEach(c => { if (s[c] !== undefined) $(c).checked = s[c]; });
+    } catch(e) {}
+  }
+  function save(){
+    try {
+      const s = {};
+      FIELDS.forEach(f => s[f] = $(f).value);
+      CHECKS.forEach(c => s[c] = $(c).checked);
+      localStorage.setItem(KEY, JSON.stringify(s));
+    } catch(e) {}
+  }
+
+  const q = s => "'" + String(s).replace(/'/g, "''") + "'";
+  const list = s => String(s).split(/[,\s]+/).map(x => x.trim()).filter(Boolean);
+  const arr = s => { const a = list(s); return a.length ? 'ARRAY[' + a.map(q).join(',') + ']::text[]' : 'ARRAY[]::text[]'; };
+  const num = (v, d) => { const n = parseFloat(v); return isFinite(n) ? n : d; };
+  const int = (v, d) => { const n = parseInt(v, 10); return isFinite(n) ? n : d; };
+
+  function vals(){
+    const fy = int($('fy').value, 2569);
+    const ce = fy - 543;              // ปีงบ 2569 → เริ่ม 1 ต.ค. 2025
+    let cutoff = num($('cutoff').value, 6.5);
+    return {
+      fy, cutoff: cutoff.toFixed(1).replace(/\.0$/, '.0'),
+      cutoffRaw: cutoff,
+      gap: int($('gap').value, 90),
+      buffer: int($('buffer').value, 0),
+      labstart: /^\d{4}-\d{2}-\d{2}$/.test($('labstart').value) ? $('labstart').value : '2018-01-01',
+      lastFrom: (ce - 1) + '-10-01',
+      lastFromTh: '1 ต.ค. ' + (fy - 1),
+      hip: arr($('hip').value),
+      icd: q($('icd').value.trim() || '^E1[1-4]'),
+      icodes: arr($('icodes').value),
+      labcodes: arr($('labcodes').value),
+      a1cre: q($('a1cre').value.trim() || '(hb ?a1c|a1c|glycated|glycosylated)'),
+      drugre: q($('drugre').value.replace(/\s*[\r\n]+\s*/g, '').replace(/\s*\|\s*/g, '|').trim()),
+      gen: $('optGeneric').checked, confirm: $('optConfirm').checked,
+      death: $('optDeath').checked, ever: $('optEver').checked
+    };
+  }
+
+  function paramsCTE(v){
+    return `WITH params AS (
+    SELECT
+        ${v.cutoffRaw}::numeric${' '.repeat(Math.max(1, 16 - String(v.cutoffRaw).length))}AS a1c_cutoff,             -- HbA1c ต้องน้อยกว่าค่านี้
+        ${v.gap}${' '.repeat(Math.max(1, 28 - String(v.gap).length))}AS min_gap_days,           -- 2 ครั้งห่างกันอย่างน้อย (วัน)
+        ${v.buffer}${' '.repeat(Math.max(1, 28 - String(v.buffer).length))}AS drug_free_buffer_days,  -- 0 = ไม่มียาตั้งแต่วันตรวจครั้งแรก / 90 = เกณฑ์ ADA เข้มงวด
+        DATE '${v.labstart}'           AS lab_start_date,         -- ดึง lab ตั้งแต่วันนี้
+        DATE '${v.lastFrom}'           AS last_a1c_from,          -- HbA1c ครั้งล่าสุดต้องตั้งแต่ปีงบ ${v.fy} (${v.lastFromTh})
+        ${v.hip} AS uc_hipdata,
+        ${v.icd}::text AS dm_icd10_regex,
+        -- icode ยาเบาหวานของ รพ.
+        ${v.icodes} AS dm_icodes,
+        -- ดักชื่อยาเบาหวาน (ไม่สนตัวพิมพ์เล็ก/ใหญ่)
+        ${v.drugre}::text AS dm_drug_regex,
+        -- ดักชื่อ lab HbA1c (หรือใส่ lab_items_code ใน a1c_lab_codes แทน)
+        ${v.a1cre}::text AS a1c_name_regex,
+        ${v.labcodes} AS a1c_lab_codes
+)`;
+  }
+
+  function mainSQL(v){
+    return `/* =====================================================================
+   DM Remission (สิทธิ UC: hipdata UCS, WEL) — HOSxP XE / PostgreSQL
+   ---------------------------------------------------------------------
+   เกณฑ์
+   1) เป็นผู้ป่วยเบาหวาน (ICD-10 ตาม dm_icd10_regex ใน ovstdiag)
+   2) สิทธิ์ล่าสุด (visit ล่าสุด) hipdata_code อยู่ใน uc_hipdata
+      (ใช้สิทธิ์จาก visit ล่าสุด ถ้าไม่มี visit ใช้ patient.pttype)
+   2.1) HbA1c ครั้งล่าสุดต้องตั้งแต่ปีงบ ${v.fy} (>= ${v.lastFromTh})
+   3) HbA1c 2 ครั้งล่าสุด (นับวันละ 1 ค่า) < ${v.cutoffRaw} ทั้ง 2 ครั้ง
+      และห่างกันอย่างน้อย ${v.gap} วัน
+   4) ไม่ได้รับยาเบาหวานแล้ว: ไม่มีการจ่ายยาเบาหวาน (OPD/IPD ใน opitemrece)
+      ตั้งแต่ (วันตรวจ HbA1c ครั้งแรกในคู่นั้น - ${v.buffer} วัน) จนถึงปัจจุบัน
+      ยาเบาหวานดักจับ 2 ทาง: icode ที่กำหนด + ชื่อยา
+   ===================================================================== */
+
+${paramsCTE(v)},
+
+/* ---------- รายการยาเบาหวานในคลังยาของ รพ. ---------- */
+dm_drug_items AS (
+    SELECT d.icode, d.name, d.strength
+    FROM drugitems d
+    CROSS JOIN params p
+    WHERE d.icode = ANY (p.dm_icodes)
+       OR concat_ws(' ', d.name, d.strength) ~* p.dm_drug_regex${v.gen ? `
+       OR concat_ws(' ', d.generic_name, d.trade_name) ~* p.dm_drug_regex` : ''}
+),
+
+/* ---------- ผู้ป่วยเบาหวาน ---------- */
+dm_patients AS (
+    SELECT dx.hn,
+           min(dx.vstdate) AS first_dm_dx_date,
+           count(DISTINCT dx.vn) AS dm_visit_count
+    FROM ovstdiag dx
+    CROSS JOIN params p
+    WHERE dx.icd10 ~ p.dm_icd10_regex
+    GROUP BY dx.hn
+),
+
+/* ---------- ผล HbA1c (แปลงข้อความเป็นตัวเลข) ---------- */
+a1c_raw AS (
+    SELECT lh.hn,
+           lh.order_date::date AS lab_date,
+           lh.lab_order_number,
+           lo.lab_order_result AS result_text,
+           substring(replace(lo.lab_order_result, ',', '.') FROM '[0-9]+(?:\\.[0-9]+)?')::numeric AS a1c
+    FROM lab_head  lh
+    JOIN lab_order lo ON lo.lab_order_number = lh.lab_order_number
+    JOIN lab_items li ON li.lab_items_code   = lo.lab_items_code
+    CROSS JOIN params p
+    WHERE lh.order_date >= p.lab_start_date
+      AND lh.hn IN (SELECT hn FROM dm_patients)
+      AND ( li.lab_items_code::text = ANY (p.a1c_lab_codes)
+            OR (cardinality(p.a1c_lab_codes) = 0 AND li.lab_items_name ~* p.a1c_name_regex) )
+      AND lo.lab_order_result ~ '[0-9]'${v.confirm ? `
+      AND lh.confirm_report = 'Y'` : ''}
+),
+a1c_valid AS (                     -- ตัดค่าผิดปกติ (พิมพ์ผิด/หน่วย mmol/mol)
+    SELECT * FROM a1c_raw WHERE a1c BETWEEN 3 AND 20
+),
+a1c_daily AS (                     -- วันละ 1 ค่า (ค่าล่าสุดของวัน)
+    SELECT DISTINCT ON (hn, lab_date) hn, lab_date, a1c, result_text
+    FROM a1c_valid
+    ORDER BY hn, lab_date, lab_order_number DESC
+),
+a1c_ranked AS (
+    SELECT hn, lab_date, a1c, result_text,
+           row_number() OVER (PARTITION BY hn ORDER BY lab_date DESC) AS rn
+    FROM a1c_daily
+),
+a1c_last2 AS (
+    SELECT hn,
+           max(lab_date) FILTER (WHERE rn = 1) AS a1c_date_latest,
+           max(a1c)      FILTER (WHERE rn = 1) AS a1c_latest,
+           max(lab_date) FILTER (WHERE rn = 2) AS a1c_date_prev,
+           max(a1c)      FILTER (WHERE rn = 2) AS a1c_prev
+    FROM a1c_ranked
+    WHERE rn <= 2
+    GROUP BY hn
+),
+a1c_history AS (                   -- ใช้ยืนยันว่าเคยเป็นเบาหวานจริง
+    SELECT hn, max(a1c) AS a1c_max_ever, count(*) AS a1c_test_count
+    FROM a1c_daily
+    GROUP BY hn
+),
+
+/* ---------- คู่ HbA1c ที่ผ่านเกณฑ์ ---------- */
+a1c_pass AS (
+    SELECT l.*
+    FROM a1c_last2 l
+    CROSS JOIN params p
+    WHERE l.a1c_prev IS NOT NULL
+      AND l.a1c_latest < p.a1c_cutoff
+      AND l.a1c_prev   < p.a1c_cutoff
+      AND (l.a1c_date_latest - l.a1c_date_prev) >= p.min_gap_days
+),
+
+/* ---------- ประวัติการได้รับยาเบาหวาน ---------- */
+dm_drug_last AS (
+    SELECT DISTINCT ON (oi.hn)
+           oi.hn,
+           oi.vstdate::date AS last_dm_drug_date,
+           di.name          AS last_dm_drug_name
+    FROM opitemrece oi
+    JOIN dm_drug_items di ON di.icode = oi.icode
+    WHERE oi.hn IN (SELECT hn FROM a1c_pass)
+      AND coalesce(oi.qty, 0) > 0
+    ORDER BY oi.hn, oi.vstdate DESC
+),
+
+/* ---------- สิทธิ์ ณ visit ล่าสุด ---------- */
+last_visit AS (
+    SELECT DISTINCT ON (o.hn) o.hn, o.vn, o.vstdate::date AS last_visit_date, o.pttype
+    FROM ovst o
+    WHERE o.hn IN (SELECT hn FROM a1c_pass)
+    ORDER BY o.hn, o.vstdate DESC, o.vsttime DESC
+)
+
+/* ======================= ผลลัพธ์ ======================= */
+SELECT
+    pt.hn,
+    pt.cid,
+    concat(pt.pname, pt.fname, ' ', pt.lname)              AS patient_name,
+    date_part('year', age(current_date, pt.birthday))::int AS age_y,
+    pt.sex,
+    coalesce(lv.pttype, pt.pttype)                         AS pttype,
+    ptt.name                                               AS pttype_name,
+    ptt.hipdata_code,
+    dm.first_dm_dx_date,
+    ap.a1c_date_prev,
+    ap.a1c_prev,
+    ap.a1c_date_latest,
+    ap.a1c_latest,
+    (ap.a1c_date_latest - ap.a1c_date_prev)                AS gap_days,
+    ah.a1c_max_ever,
+    ah.a1c_test_count,
+    dl.last_dm_drug_date,
+    dl.last_dm_drug_name,
+    CASE WHEN dl.last_dm_drug_date IS NULL THEN 'ไม่พบประวัติยาเบาหวานใน รพ.'
+         ELSE 'หยุดยามาแล้ว ' || (current_date - dl.last_dm_drug_date) || ' วัน' END AS drug_status,
+    CASE WHEN dl.last_dm_drug_date IS NOT NULL OR ah.a1c_max_ever >= p.a1c_cutoff
+         THEN 'Y' ELSE 'N' END                             AS evidence_prior_dm,  -- N = ควรทบทวน dx
+    lv.last_visit_date
+FROM a1c_pass ap
+CROSS JOIN params p
+JOIN patient          pt  ON pt.hn  = ap.hn
+JOIN dm_patients      dm  ON dm.hn  = ap.hn
+JOIN a1c_history      ah  ON ah.hn  = ap.hn
+LEFT JOIN last_visit  lv  ON lv.hn  = ap.hn
+LEFT JOIN pttype      ptt ON ptt.pttype = coalesce(lv.pttype, pt.pttype)
+LEFT JOIN dm_drug_last dl ON dl.hn  = ap.hn
+WHERE ptt.hipdata_code = ANY (p.uc_hipdata)
+  AND ap.a1c_date_latest >= p.last_a1c_from            -- HbA1c ล่าสุดตั้งแต่ ${v.lastFromTh}
+  AND ( dl.last_dm_drug_date IS NULL
+        OR dl.last_dm_drug_date < ap.a1c_date_prev - p.drug_free_buffer_days )${v.death ? `
+  AND coalesce(pt.death, 'N') <> 'Y'                   -- ตัดผู้เสียชีวิต` : ''}${v.ever ? `
+  AND ah.a1c_max_ever >= p.a1c_cutoff                  -- เฉพาะคนที่เคยมี HbA1c ≥ ค่าตัด` : ''}
+ORDER BY ap.a1c_date_latest DESC, pt.hn;`;
+  }
+
+  function drugSQL(v){
+    return `/* ตรวจสอบ: รายการยาที่ระบบจับได้ว่าเป็น "ยาเบาหวาน"
+   รันก่อนครั้งแรกในแต่ละ รพ. เพื่อดูว่าจับครบ/จับเกินหรือไม่ */
+
+${paramsCTE(v)}
+SELECT d.icode, d.name, d.strength, d.units,
+       CASE WHEN d.icode = ANY (p.dm_icodes) THEN 'icode' ELSE 'name' END AS matched_by
+FROM drugitems d
+CROSS JOIN params p
+WHERE d.icode = ANY (p.dm_icodes)
+   OR concat_ws(' ', d.name, d.strength) ~* p.dm_drug_regex${v.gen ? `
+   OR concat_ws(' ', d.generic_name, d.trade_name) ~* p.dm_drug_regex` : ''}
+ORDER BY d.name;`;
+  }
+
+  function labSQL(v){
+    return `/* ตรวจสอบ: รายการ lab ที่ระบบจับได้ว่าเป็น HbA1c
+   ดักจากชื่อ lab ที่มีคำว่า HbA1c / A1c / glycated / glycosylated */
+
+${paramsCTE(v)}
+SELECT li.lab_items_code, li.lab_items_name,
+       CASE WHEN li.lab_items_code::text = ANY (p.a1c_lab_codes) THEN 'code' ELSE 'name' END AS matched_by
+FROM lab_items li
+CROSS JOIN params p
+WHERE li.lab_items_code::text = ANY (p.a1c_lab_codes)
+   OR (cardinality(p.a1c_lab_codes) = 0 AND li.lab_items_name ~* p.a1c_name_regex)
+ORDER BY li.lab_items_name;`;
+  }
+
+  let tab = 'main';
+  function render(){
+    const v = vals();
+    const sql = tab === 'main' ? mainSQL(v) : tab === 'drug' ? drugSQL(v) : labSQL(v);
+    $('out').textContent = sql;
+    save();
+  }
+
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+    t.classList.add('on'); tab = t.dataset.t; render();
+  }));
+  $('gen').addEventListener('click', render);
+  FIELDS.concat(CHECKS).forEach(f => $(f).addEventListener('change', render));
+  $('reset').addEventListener('click', () => {
+    FIELDS.forEach(f => $(f).value = defaults[f]);
+    CHECKS.forEach(c => $(c).checked = defaults[c]);
+    render();
+  });
+
+  $('copy').addEventListener('click', async () => {
+    const btn = $('copy'), txt = $('out').textContent;
+    let ok = false;
+    try { await navigator.clipboard.writeText(txt); ok = true; } catch(e) {}
+    if (!ok) {
+      try {
+        const r = document.createRange(); r.selectNodeContents($('out'));
+        const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+        ok = document.execCommand('copy');
+      } catch(e) {}
+    }
+    btn.textContent = ok ? 'คัดลอกแล้ว ✓' : 'กด Ctrl+C เพื่อคัดลอก';
+    btn.classList.toggle('ok', ok);
+    setTimeout(() => { btn.textContent = 'คัดลอก'; btn.classList.remove('ok'); }, 2000);
+  });
+
+  load();
+  render();
+})();
+</script>
+</body>
+</html>
